@@ -1,0 +1,36 @@
+import serial
+import MySQLdb
+import time
+import datetime
+from time import strftime
+
+dbConn = MySQLdb.connect("localhost","weatherstation","iotweatherstationuthm","weatherData") or die ("Could not connect to database")
+cursor = dbConn.cursor()
+
+while True:
+    ser=serial.Serial('/dev/ttyACM0',9600)
+    datetimeWrite = (time.strftime("%Y-%m-%d ") + time.strftime("%H:%M:%S"))
+    print datetimeWrite
+    online = ser.readline()
+    winddirection = ser.readline()
+    windspeed = ser.readline()
+    windgust = ser.readline()
+    humidity = ser.readline()
+    temperature = ser.readline()
+    dailyrainin = ser.readline()
+    pressure = ser.readline()
+    lightlvl = ser.readline()
+    
+    sql = "INSERT INTO weatherVar (datetime,winddir,windspd,windgust,humidity,temperature,dailyrainin,pressure,lightlvl) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    data = (datetimeWrite,winddirection,windspeed,windgust,humidity,temperature,dailyrainin,pressure,lightlvl)
+    try:
+        print "Writing to database..."
+        cursor.execute(sql,(data))
+        dbConn.commit()
+        print "Write complete"
+        
+    except:
+        dbConn.rollback()
+        print "Failed writing to database"
+
+#dbConn.close()
